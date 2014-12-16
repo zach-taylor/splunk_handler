@@ -83,6 +83,8 @@ Here is an example dictionary config:
         }
     }
 
+Then, do `logging.dictConfig(LOGGING)` to configure your logging.
+
 Couple notes about this:
 
 * I have included a configuration for the SplunkFilter class that is located in this
