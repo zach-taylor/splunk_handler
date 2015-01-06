@@ -39,7 +39,7 @@ Here is an open source one: https://github.com/madzak/python-json-logger
 ### Logging Config
 
 Sometimes it's a good idea to create a logging configuration using a Python dict
-and the `logging.dictConfig` function. This method is used by default in Django.
+and the `logging.config.dictConfig` function. This method is used by default in Django.
 
 Here is an example dictionary config:
 
@@ -49,7 +49,7 @@ Here is an example dictionary config:
         'formatters': {
             'json': {
                 '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-                'format': '%(asctime)s %(created)f %(filename)s %(funcName)s %(levelname)s %(levelno)s %(lineno)d %(module)s %(message)s %(pathname)s %(process)s %(processName)s %(relativeCreated)d %(thread)s %(threadName)s'
+                'format': '%(asctime)s %(created)f %(exc_info)s %(filename)s %(funcName)s %(levelname)s %(levelno)s %(lineno)d %(module)s %(message)s %(pathname)s %(process)s %(processName)s %(relativeCreated)d %(thread)s %(threadName)s'
             }
         },
         'filters': {
@@ -83,7 +83,7 @@ Here is an example dictionary config:
         }
     }
 
-Then, do `logging.dictConfig(LOGGING)` to configure your logging.
+Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
 Couple notes about this:
 
