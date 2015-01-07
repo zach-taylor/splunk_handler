@@ -3,18 +3,8 @@ import socket
 import traceback
 
 from threading import Thread
-from splunklib import client
 
-_client = None
-
-
-class SplunkFilter(logging.Filter):
-    """
-    A logging filter for Splunk's debug logs on the root logger to avoid recursion
-    """
-
-    def filter(self, record):
-        return not (record.module == 'binding' and record.levelno == logging.DEBUG)
+import requests
 
 
 class SplunkHandler(logging.Handler):
@@ -38,27 +28,28 @@ class SplunkHandler(logging.Handler):
 
         thread.start()
 
-    def _init_client(self):
-
-        return client.connect(
-                   host=self.host,
-                   port=self.port,
-                   username=self.username,
-                   password=self.password)
-
     def _async_emit(self, record):
 
-        global _client
-
-        if not _client:
-            _client = self._init_client()
-
         try:
-            _client.indexes[self.index].submit(
-                 self.format(record),
-                 host=socket.gethostname(),
-                 source=record.pathname,
-                 sourcetype='json')
+
+            params = {
+                'host': socket.gethostname(),
+                'index': self.index,
+                'source': record.pathname,
+                'sourcetype': 'json'
+            }
+            url = 'https://%s:%s/services/receivers/simple' % (self.host, self.port)
+            payload = self.format(record)
+            auth = (self.username, self.password)
+
+            r = requests.post(
+                url,
+                auth=auth,
+                data=payload,
+                params=params
+            )
+
+            r.close()
 
         except Exception, e:
 
