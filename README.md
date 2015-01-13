@@ -52,11 +52,6 @@ Here is an example dictionary config:
                 'format': '%(asctime)s %(created)f %(exc_info)s %(filename)s %(funcName)s %(levelname)s %(levelno)s %(lineno)d %(module)s %(message)s %(pathname)s %(process)s %(processName)s %(relativeCreated)d %(thread)s %(threadName)s'
             }
         },
-        'filters': {
-            'splunk_filter': {
-                '()': 'splunk_handler.SplunkFilter'
-            }
-        },
         'handlers': {
             'splunk': {
                 'level': 'DEBUG',
@@ -79,6 +74,9 @@ Here is an example dictionary config:
             '': {
                 'handlers': ['console', 'splunk'],
                 'level': 'DEBUG'
+            },
+            'requests': {
+              'propagate': False
             }
         }
     }
@@ -87,11 +85,8 @@ Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
 Couple notes about this:
 
-* I have included a configuration for the SplunkFilter class that is located in this
-package. It is necessary if you want to forward debug logs to the Splunk, because
-Splunk's SDK has debug logging that logs directly to the root logger. There is an
-[open issue](https://github.com/splunk/splunk-sdk-python/pull/94) but this filter is
-required until that gets merged and a new version of the SDK is released.
+* It is important to include the configuration for the requests library logger
+so that you do not cause a recursive loop of log entries to be sent to Splunk.
 * I included a configuration for the JSON formatter mentioned above.
 
 ## Contributing
