@@ -22,6 +22,9 @@ class SplunkHandler(logging.Handler):
         self.password = password
         self.index = index
 
+        requests_log = logging.getLogger('requests')
+        requests_log.propagate = False
+
     def emit(self, record):
 
         thread = Thread(target=self._async_emit, args=(record, ))
