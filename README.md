@@ -74,20 +74,13 @@ Here is an example dictionary config:
             '': {
                 'handlers': ['console', 'splunk'],
                 'level': 'DEBUG'
-            },
-            'requests': {
-              'propagate': False
             }
         }
     }
 
 Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
-Couple notes about this:
-
-* It is important to include the configuration for the requests library logger
-so that you do not cause a recursive loop of log entries to be sent to Splunk.
-* I included a configuration for the JSON formatter mentioned above.
+Note: I included a configuration for the JSON formatter mentioned above.
 
 ## Contributing
 
