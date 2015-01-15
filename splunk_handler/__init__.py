@@ -12,7 +12,7 @@ class SplunkHandler(logging.Handler):
     A logging handler to send events to a Splunk Enterprise instance
     """
 
-    def __init__(self, host, port, username, password, index):
+    def __init__(self, host, port, username, password, index, hostname=None, source=None, sourcetype='json'):
 
         logging.Handler.__init__(self)
 
@@ -21,7 +21,15 @@ class SplunkHandler(logging.Handler):
         self.username = username
         self.password = password
         self.index = index
+        self.source = source
+        self.sourcetype = sourcetype
 
+        if hostname is None:
+            self.hostname = socket.gethostname()
+        else:
+            self.hostname = hostname
+
+        # prevent infinite recursion by silencing requests logger
         requests_log = logging.getLogger('requests')
         requests_log.propagate = False
 
@@ -35,11 +43,16 @@ class SplunkHandler(logging.Handler):
 
         try:
 
+            if self.source is None:
+                source = record.pathname
+            else:
+                source = self.source
+
             params = {
-                'host': socket.gethostname(),
+                'host': self.hostname,
                 'index': self.index,
-                'source': record.pathname,
-                'sourcetype': 'json'
+                'source': source,
+                'sourcetype': self.sourcetype
             }
             url = 'https://%s:%s/services/receivers/simple' % (self.host, self.port)
             payload = self.format(record)
