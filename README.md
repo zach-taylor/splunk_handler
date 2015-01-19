@@ -31,7 +31,7 @@ Example:
 
     logging.getLogger('').addHandler(splunk)
 
-    logging.info('hello!')
+    logging.warning('hello!')
 
 I would recommend using a JSON formatter with this to receive your logs in JSON format.
 Here is an open source one: https://github.com/madzak/python-json-logger
@@ -57,12 +57,12 @@ Here is an example dictionary config:
                 'level': 'DEBUG',
                 'class': 'splunk_handler.SplunkHandler',
                 'formatter': 'json',
-                'filters': ['splunk_filter'],
                 'host': SPLUNK_HOST,
                 'port': SPLUNK_PORT,
                 'username': SPLUNK_USERNAME,
                 'password': SPLUNK_PASSWORD,
-                'index': SPLUNK_INDEX
+                'index': SPLUNK_INDEX,
+                'sourcetype': 'json'
             },
             'console': {
                 'level': 'DEBUG',

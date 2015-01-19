@@ -12,7 +12,7 @@ class SplunkHandler(logging.Handler):
     A logging handler to send events to a Splunk Enterprise instance
     """
 
-    def __init__(self, host, port, username, password, index, hostname=None, source=None, sourcetype='json'):
+    def __init__(self, host, port, username, password, index, hostname=None, source=None, sourcetype='python', verify=True):
 
         logging.Handler.__init__(self)
 
@@ -23,6 +23,7 @@ class SplunkHandler(logging.Handler):
         self.index = index
         self.source = source
         self.sourcetype = sourcetype
+        self.verify = verify
 
         if hostname is None:
             self.hostname = socket.gethostname()
@@ -62,7 +63,8 @@ class SplunkHandler(logging.Handler):
                 url,
                 auth=auth,
                 data=payload,
-                params=params
+                params=params,
+                verify=self.verify
             )
 
             r.close()
