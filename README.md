@@ -27,6 +27,10 @@ Example:
         username='username',
         password='password',
         index='main'
+        #hostname='hostname', # manually set a hostname parameter, defaults to socket.gethostname()
+        #source='source', # manually set a source, defaults to the log record.pathname
+        #sourcetype='sourcetype', # manually set a sourcetype, defaults to 'text'
+        #verify=True # turn SSL verification on or off, defaults to True
     )
 
     logging.getLogger('').addHandler(splunk)
