@@ -12,7 +12,7 @@ class SplunkHandler(logging.Handler):
     A logging handler to send events to a Splunk Enterprise instance
     """
 
-    def __init__(self, host, port, username, password, index, hostname=None, source=None, sourcetype='python', verify=True):
+    def __init__(self, host, port, username, password, index, hostname=None, source=None, sourcetype='text', verify=True):
 
         logging.Handler.__init__(self)
 
