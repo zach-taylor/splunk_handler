@@ -31,9 +31,12 @@ class SplunkHandler(logging.Handler):
         else:
             self.hostname = hostname
 
-        # prevent infinite recursion by silencing requests logger
-        requests_log = logging.getLogger('requests')
-        requests_log.propagate = False
+        # prevent infinite recursion by silencing requests and urllib3 loggers
+        logging.getLogger('requests').propagate = False
+        logging.getLogger('urllib3').propagate = False
+
+        # and do the same for ourselves
+        logging.getLogger(__name__).propagate = False
 
     def emit(self, record):
 
@@ -71,7 +74,9 @@ class SplunkHandler(logging.Handler):
             r.close()
 
         except Exception, e:
-
-            print "Traceback:\n" + traceback.format_exc()
-            print "Exception in Splunk logging handler: %s" % str(e)
+            try:
+                print traceback.format_exc()
+                print "Exception in Splunk logging handler: %s" % str(e)
+            except:
+                pass
 

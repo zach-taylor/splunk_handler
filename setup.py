@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name = 'splunk_handler',
-    version = '1.1.0',
+    version = '1.1.1',
     license = 'MIT License',
     description = 'A Python logging handler that sends your logs to Splunk',
     long_description = open('README.md').read(),
