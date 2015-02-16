@@ -18,6 +18,7 @@ Then use it like any other regular Python [logging handler](https://docs.python.
 
 Example:
 
+~~~python
     import logging
     from splunk_handler import SplunkHandler
 
@@ -36,6 +37,7 @@ Example:
     logging.getLogger('').addHandler(splunk)
 
     logging.warning('hello!')
+~~~
 
 I would recommend using a JSON formatter with this to receive your logs in JSON format.
 Here is an open source one: https://github.com/madzak/python-json-logger
@@ -47,6 +49,7 @@ and the `logging.config.dictConfig` function. This method is used by default in 
 
 Here is an example dictionary config:
 
+~~~python
     LOGGING = {
         'version': 1,
         'disable_existing_loggers': False,
@@ -81,6 +84,7 @@ Here is an example dictionary config:
             }
         }
     }
+~~~
 
 Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
