@@ -33,10 +33,13 @@ class SplunkHandler(logging.Handler):
 
         # prevent infinite recursion by silencing requests and urllib3 loggers
         logging.getLogger('requests').propagate = False
-        logging.getLogger('urllib3').propagate = False
 
         # and do the same for ourselves
         logging.getLogger(__name__).propagate = False
+
+        # disable all warnings from urllib3 package
+        if not self.verify:
+            requests.packages.urllib3.disable_warnings()
 
     def emit(self, record):
 
