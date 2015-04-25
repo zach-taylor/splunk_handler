@@ -76,10 +76,10 @@ class SplunkHandler(logging.Handler):
 
             r.close()
 
-        except Exception, e:
+        except Exception as e:
             try:
-                print traceback.format_exc()
-                print "Exception in Splunk logging handler: %s" % str(e)
+                print(traceback.format_exc())
+                print("Exception in Splunk logging handler: %s" % str(e))
             except:
                 pass
 
