@@ -13,7 +13,7 @@ class SplunkHandler(logging.Handler):
     """
 
     def __init__(self, host, port, username, password, index,
-                 hostname=None, source=None, sourcetype='text', verify=True):
+                 hostname=None, source=None, sourcetype='text', verify=False):
 
         logging.Handler.__init__(self)
 
