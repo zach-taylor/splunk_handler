@@ -16,6 +16,7 @@ if is_py2:
 else:
     from queue import Queue, Full, Empty
 
+
 class SplunkHandler(logging.Handler):
     """
     A logging handler to send events to a Splunk Enterprise instance
