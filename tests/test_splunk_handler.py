@@ -81,8 +81,8 @@ class TestSplunkHandler(unittest.TestCase):
 
         self.splunk.timer.join() # Have to wait for the timer to exec
 
-        expected_output = '{"index": "%s", "sourcetype": "%s", "source": "%s", "host": "%s", "time": null, "event": "hello!"}' % \
-                          (SPLUNK_INDEX, SPLUNK_SOURCETYPE, SPLUNK_SOURCE, SPLUNK_HOSTNAME)
+        expected_output = '{"event": "hello!", "host": "%s", "index": "%s", "source": "%s", "sourcetype": "%s", "time": null}' % \
+                          (SPLUNK_HOSTNAME, SPLUNK_INDEX, SPLUNK_SOURCE, SPLUNK_SOURCETYPE)
         requests.post.return_value = mock_response()
         requests.post.assert_called_once_with(
             RECEIVER_URL,

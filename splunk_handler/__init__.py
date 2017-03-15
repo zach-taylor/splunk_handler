@@ -95,7 +95,7 @@ class SplunkHandler(logging.Handler):
             'event': self.format(record),
         }
 
-        return json.dumps(params)
+        return json.dumps(params, sort_keys=True)
 
     def _splunk_worker(self):
         queue_empty = True
