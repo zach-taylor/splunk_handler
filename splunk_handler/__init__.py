@@ -43,6 +43,7 @@ class SplunkHandler(logging.Handler):
         self.log_payload = ""
         self.SIGTERM = False  # 'True' if application requested exit
         self.timer = None
+        self.testing = False  # Used for slightly altering logic during unit testing
         # It is possible to get 'behind' and never catch up, so we limit the queue size
         self.queue = Queue(maxsize=queue_size)
 
@@ -80,8 +81,12 @@ class SplunkHandler(logging.Handler):
         else:
             source = self.source
 
+        current_time = time.time()
+        if self.testing:
+            current_time = None
+
         params = {
-            'time': time.time(),
+            'time': current_time,
             'host': self.hostname,
             'index': self.index,
             'source': source,
