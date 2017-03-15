@@ -4,6 +4,10 @@
 [![Code Climate](https://img.shields.io/codeclimate/github/zach-taylor/splunk_handler.svg?style=flat-square)](https://codeclimate.com/github/zach-taylor/splunk_handler)
 [![PyPI](https://img.shields.io/pypi/v/splunk_handler.svg?style=flat-square)](https://pypi.python.org/pypi/splunk_handler)
 
+**Splunk Handler is a Python Logger for sending logged events to an installation of Splunk Enterprise.**
+
+*This logger requires the destination Splunk Enterprise server to have enabled and configured the [Splunk HTTP Event Collector](http://dev.splunk.com/view/event-collector/SP-CAAAE6M).*
+
 ## Installation
 
 Pip:
