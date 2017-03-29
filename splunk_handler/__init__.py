@@ -27,7 +27,7 @@ class SplunkHandler(logging.Handler):
     def __init__(self, host, port, token, index,
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
-                 queue_size=5000):
+                 queue_size=5000, record_time='time.time()'):
 
         SplunkHandler.instances.append(self)
         logging.Handler.__init__(self)
@@ -42,6 +42,9 @@ class SplunkHandler(logging.Handler):
         self.timeout = timeout
         self.flush_interval = flush_interval
         self.log_payload = ""
+        # Allows overriding how time is set. Useful to set time to a value in
+        # the record itself.
+        self.record_time = record_time
         self.SIGTERM = False  # 'True' if application requested exit
         self.timer = None
         self.testing = False  # Used for slightly altering logic during unit testing
@@ -82,7 +85,7 @@ class SplunkHandler(logging.Handler):
         else:
             source = self.source
 
-        current_time = time.time()
+        current_time = eval(self.record_time)
         if self.testing:
             current_time = None
 
