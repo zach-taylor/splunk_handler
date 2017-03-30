@@ -27,7 +27,7 @@ class SplunkHandler(logging.Handler):
     def __init__(self, host, port, token, index,
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
-                 queue_size=5000):
+                 queue_size=5000, queue_exceptions=False):
 
         SplunkHandler.instances.append(self)
         logging.Handler.__init__(self)
@@ -47,6 +47,8 @@ class SplunkHandler(logging.Handler):
         self.testing = False  # Used for slightly altering logic during unit testing
         # It is possible to get 'behind' and never catch up, so we limit the queue size
         self.queue = Queue(maxsize=queue_size)
+        self.queue_exceptions = queue_exceptions
+        self.exceptions_queue = Queue(maxsize=queue_size)
 
         if hostname is None:
             self.hostname = socket.gethostname()
@@ -73,7 +75,9 @@ class SplunkHandler(logging.Handler):
         try:
             # Put log message into queue; worker thread will pick up
             self.queue.put_nowait(record)
-        except Full:
+        except Full as e:
+            if self.queue_exceptions:
+                self.exceptions_queue.put(e)
             print("Log queue full; log data will be dropped.")
 
     def format_record(self, record):
@@ -128,6 +132,8 @@ class SplunkHandler(logging.Handler):
                 r.raise_for_status()  # Throws exception for 4xx/5xx status
 
             except Exception as e:
+                if self.queue_exceptions:
+                    self.exceptions_queue.put(e)
                 try:
                     print(traceback.format_exc())
                     print("Exception in Splunk logging handler: %s" % str(e))
