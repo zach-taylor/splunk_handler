@@ -42,6 +42,7 @@ Example:
         #timeout=60, # timeout for waiting on a 200 OK from Splunk server, defaults to 60s
         #flush_interval=15.0, # send batches of log statements every n seconds, defaults to 15.0
         #queue_size=5000, # a throttle to prevent resource overconsumption, defaults to 5000
+        #debug=False, # turn on debug mode; prints module activity to stdout, defaults to False
     )
 
     logging.getLogger('').addHandler(splunk)
