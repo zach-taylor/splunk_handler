@@ -17,6 +17,7 @@ SPLUNK_VERIFY = False
 SPLUNK_TIMEOUT = 27
 SPLUNK_FLUSH_INTERVAL = 5.0
 SPLUNK_QUEUE_SIZE = 1111
+SPLUNK_DEBUG = False
 
 RECEIVER_URL = 'https://%s:%s/services/collector' % (SPLUNK_HOST, SPLUNK_PORT)
 
@@ -47,6 +48,7 @@ class TestSplunkHandler(unittest.TestCase):
             timeout=SPLUNK_TIMEOUT,
             flush_interval=SPLUNK_FLUSH_INTERVAL,
             queue_size=SPLUNK_QUEUE_SIZE,
+            debug=SPLUNK_DEBUG,
         )
         self.splunk.testing = True
 
@@ -68,6 +70,7 @@ class TestSplunkHandler(unittest.TestCase):
         self.assertEqual(self.splunk.timeout, SPLUNK_TIMEOUT)
         self.assertEqual(self.splunk.flush_interval, SPLUNK_FLUSH_INTERVAL)
         self.assertEqual(self.splunk.queue.maxsize, SPLUNK_QUEUE_SIZE)
+        self.assertEqual(self.splunk.debug, SPLUNK_DEBUG)
 
         self.assertFalse(logging.getLogger('requests').propagate)
         self.assertFalse(logging.getLogger('splunk_handler').propagate)
