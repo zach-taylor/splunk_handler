@@ -17,6 +17,7 @@ else:
     from queue import Queue, Full, Empty
 
 instances = []  # For keeping track of running class instances
+
 # Called when application exit imminent (main thread ended / got kill signal)
 @atexit.register
 def perform_exit():
@@ -36,6 +37,7 @@ class SplunkHandler(logging.Handler):
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False):
 
+        global instances
         instances.append(self)
         logging.Handler.__init__(self)
 
