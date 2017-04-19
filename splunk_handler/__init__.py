@@ -9,6 +9,9 @@ import traceback
 from threading import Timer
 
 import requests
+from requests.packages.urllib3.util.retry import Retry
+from requests.packages.urllib3 import PoolManager
+from requests.adapters import HTTPAdapter
 
 is_py2 = sys.version[0] == '2'
 if is_py2:
@@ -27,7 +30,8 @@ class SplunkHandler(logging.Handler):
     def __init__(self, host, port, token, index,
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
-                 queue_size=5000, debug=False):
+                 queue_size=5000, debug=False, retry_count=5,
+                 retry_backoff=2.0):
 
         SplunkHandler.instances.append(self)
         logging.Handler.__init__(self)
@@ -48,6 +52,9 @@ class SplunkHandler(logging.Handler):
         # It is possible to get 'behind' and never catch up, so we limit the queue size
         self.queue = Queue(maxsize=queue_size)
         self.debug = debug
+        self.session = requests.Session()
+        self.retry_count = retry_count
+        self.retry_backoff = retry_backoff
 
         self.write_log("Starting debug mode", is_debug=True)
 
@@ -67,6 +74,14 @@ class SplunkHandler(logging.Handler):
         # disable all warnings from urllib3 package
         if not self.verify:
             requests.packages.urllib3.disable_warnings()
+
+        # Set up automatic retry with back-off
+        self.write_log("Preparing to create a Requests session", is_debug=True)
+        retry = Retry(total=self.retry_count,
+                      backoff_factor=self.retry_backoff,
+                      status_forcelist=[ 500, 502, 503, 504 ])
+        self.session.mount('https://', HTTPAdapter(max_retries=retry))
+
 
         self.write_log("Preparing to spin off first worker thread Timer", is_debug=True)
 
@@ -158,7 +173,8 @@ class SplunkHandler(logging.Handler):
 
             try:
                 self.write_log("Sending payload: " + self.log_payload, is_debug=True)
-                r = requests.post(
+
+                r = self.session.post(
                     url,
                     data=self.log_payload,
                     headers={'Authorization': "Splunk %s" % self.token},

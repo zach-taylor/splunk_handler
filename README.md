@@ -43,6 +43,8 @@ Example:
         #flush_interval=15.0, # send batches of log statements every n seconds, defaults to 15.0
         #queue_size=5000, # a throttle to prevent resource overconsumption, defaults to 5000
         #debug=False, # turn on debug mode; prints module activity to stdout, defaults to False
+        #retry_count=5, # Number of retry attempts on a failed/erroring connection, defaults to 5
+        #retry_backoff=2.0,  # Backoff factor, default options will retry for 1 min, defaults to 2.0
     )
 
     logging.getLogger('').addHandler(splunk)
@@ -106,6 +108,13 @@ LOGGING = {
 Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
 Note: I included a configuration for the JSON formatter mentioned above.
+
+## Retry Logic
+
+This library uses the built-in retry logic from urllib3 (a retry
+counter and a backoff factor). Should the defaults not be desireable,
+you can find more information about how to best configure these
+settings in the [urllib3 documentation](https://github.com/kennethreitz/requests/blob/b2289cd2d5d21bd31cf4a818a4e0ff6951b2317a/requests/packages/urllib3/util/retry.py#L104).
 
 ## Contributing
 
