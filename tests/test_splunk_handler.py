@@ -18,20 +18,10 @@ SPLUNK_TIMEOUT = 27
 SPLUNK_FLUSH_INTERVAL = 5.0
 SPLUNK_QUEUE_SIZE = 1111
 SPLUNK_DEBUG = False
+SPLUNK_RETRY_COUNT = 1
+SPLUNK_RETRY_BACKOFF = 0.1
 
 RECEIVER_URL = 'https://%s:%s/services/collector' % (SPLUNK_HOST, SPLUNK_PORT)
-
-
-def mock_response(fixture=None, status=200):
-    response = mock.Mock()
-    if fixture is None:
-        response.text = ''
-    elif isinstance(fixture, dict):
-        response.text = str(fixture)
-    else:
-        response.text = load_fixture(fixture)
-    response.status_code = status
-    return response
 
 
 class TestSplunkHandler(unittest.TestCase):
@@ -49,6 +39,8 @@ class TestSplunkHandler(unittest.TestCase):
             flush_interval=SPLUNK_FLUSH_INTERVAL,
             queue_size=SPLUNK_QUEUE_SIZE,
             debug=SPLUNK_DEBUG,
+            retry_count=SPLUNK_RETRY_COUNT,
+            retry_backoff=SPLUNK_RETRY_BACKOFF,
         )
         self.splunk.testing = True
 
@@ -71,13 +63,20 @@ class TestSplunkHandler(unittest.TestCase):
         self.assertEqual(self.splunk.flush_interval, SPLUNK_FLUSH_INTERVAL)
         self.assertEqual(self.splunk.queue.maxsize, SPLUNK_QUEUE_SIZE)
         self.assertEqual(self.splunk.debug, SPLUNK_DEBUG)
+        self.assertEqual(self.splunk.retry_count, SPLUNK_RETRY_COUNT)
+        self.assertEqual(self.splunk.retry_backoff, SPLUNK_RETRY_BACKOFF)
 
         self.assertFalse(logging.getLogger('requests').propagate)
         self.assertFalse(logging.getLogger('splunk_handler').propagate)
 
 
-    @mock.patch('splunk_handler.requests')
-    def test_splunk_worker(self, requests):
+    @mock.patch('requests.Session.post')
+    def test_splunk_worker(self, mock_request):
+        # Silence root logger
+        log = logging.getLogger('')
+        for h in log.handlers:
+            log.removeHandler(h)
+
         log = logging.getLogger('test')
         log.addHandler(self.splunk)
         log.warning('hello!')
@@ -86,8 +85,8 @@ class TestSplunkHandler(unittest.TestCase):
 
         expected_output = '{"event": "hello!", "host": "%s", "index": "%s", "source": "%s", "sourcetype": "%s", "time": null}' % \
                           (SPLUNK_HOSTNAME, SPLUNK_INDEX, SPLUNK_SOURCE, SPLUNK_SOURCETYPE)
-        requests.post.return_value = mock_response()
-        requests.post.assert_called_once_with(
+
+        mock_request.assert_called_once_with(
             RECEIVER_URL,
             verify=SPLUNK_VERIFY,
             data=expected_output,
