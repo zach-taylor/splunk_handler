@@ -19,21 +19,30 @@ if is_py2:
 else:
     from queue import Queue, Full, Empty
 
+instances = []  # For keeping track of running class instances
+
+# Called when application exit imminent (main thread ended / got kill signal)
+@atexit.register
+def perform_exit():
+    for instance in instances:
+        try:
+            instance.shutdown()
+        except:
+            pass
 
 class SplunkHandler(logging.Handler):
     """
     A logging handler to send events to a Splunk Enterprise instance
     running the Splunk HTTP Event Collector.
     """
-    instances = []  # For keeping track of running class instances
-
     def __init__(self, host, port, token, index,
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False, retry_count=5,
                  retry_backoff=2.0):
 
-        SplunkHandler.instances.append(self)
+        global instances
+        instances.append(self)
         logging.Handler.__init__(self)
 
         self.host = host
@@ -211,7 +220,15 @@ class SplunkHandler(logging.Handler):
             self.timer.start()
             self.write_log("Timer thread scheduled", is_debug=True)
 
+    def close(self):
+        self.shutdown()
+        logging.Handler.close(self)
+
     def shutdown(self):
+        # Only initiate shutdown once
+        if self.SIGTERM:
+            return
+
         self.write_log("Immediate shutdown requested", is_debug=True)
         self.SIGTERM = True
         self.timer.cancel()  # Cancels the scheduled Timer, allows exit immediatley
@@ -219,12 +236,3 @@ class SplunkHandler(logging.Handler):
         self.write_log("Starting up the final run of the worker thread before shutdown", is_debug=True)
         # Send the remaining items that might be sitting in queue.
         self._splunk_worker()
-
-    # Called when application exit imminent (main thread ended / got kill signal)
-    @atexit.register
-    def catch_exit():
-        for instance in SplunkHandler.instances:
-            try:
-                instance.shutdown()
-            except:
-                pass
