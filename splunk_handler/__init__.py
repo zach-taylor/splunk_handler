@@ -204,7 +204,15 @@ class SplunkHandler(logging.Handler):
             self.timer.start()
             self.write_log("Timer thread scheduled", is_debug=True)
 
+    def close(self):
+        self.shutdown()
+        logging.Handler.close(self)
+
     def shutdown(self):
+        # Only initiate shutdown once
+        if self.SIGTERM:
+            return
+
         self.write_log("Immediate shutdown requested", is_debug=True)
         self.SIGTERM = True
         self.timer.cancel()  # Cancels the scheduled Timer, allows exit immediatley
