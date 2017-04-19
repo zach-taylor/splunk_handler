@@ -10,7 +10,6 @@ from threading import Timer
 
 import requests
 from requests.packages.urllib3.util.retry import Retry
-from requests.packages.urllib3 import PoolManager
 from requests.adapters import HTTPAdapter
 
 is_py2 = sys.version[0] == '2'
