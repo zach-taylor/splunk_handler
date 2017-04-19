@@ -182,7 +182,6 @@ class SplunkHandler(logging.Handler):
 
             try:
                 self.write_log("Sending payload: " + self.log_payload, is_debug=True)
-
                 r = self.session.post(
                     url,
                     data=self.log_payload,
