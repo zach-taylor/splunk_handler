@@ -238,7 +238,9 @@ class SplunkHandler(logging.Handler):
 
         self.write_log("Setting instance SIGTERM=True", is_debug=True)
         self.SIGTERM = True
-        self.timer.cancel()  # Cancels the scheduled Timer, allows exit immediatley
+
+        if self.flush_interval > 0:
+            self.timer.cancel()  # Cancels the scheduled Timer, allows exit immediatley
 
         self.write_log("Starting up the final run of the worker thread before shutdown", is_debug=True)
         # Send the remaining items that might be sitting in queue.
