@@ -10,13 +10,13 @@
 
 ## A Note on Using with AWS Lambda
 
-[AWS Lambda](https://aws.amazon.com/lambda/) has a custom implementation of Python Threading, and does not signal when the main thread exits. Because of this, it is possible to have Lambda halt execution while logs are still being processed. To ensure that execution does not terminate prematurely, Lambda users will be required to invoke splunk_handler.perform_exit directly as the very last call in the Lambda handler, which will block the main thread from exiting until all logs have processed.
+[AWS Lambda](https://aws.amazon.com/lambda/) has a custom implementation of Python Threading, and does not signal when the main thread exits. Because of this, it is possible to have Lambda halt execution while logs are still being processed. To ensure that execution does not terminate prematurely, Lambda users will be required to invoke splunk_handler.force_flush directly as the very last call in the Lambda handler, which will block the main thread from exiting until all logs have processed.
 ~~~python
-from splunk_handler import perform_exit
+from splunk_handler import force_flush
 
 def lambda_handler(event, context):
     do_work()
-    perform_exit()  # Flush logs and shut down processing
+    force_flush()  # Flush logs in a blocking manner
 ~~~
 
 

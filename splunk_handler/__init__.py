@@ -29,6 +29,13 @@ def perform_exit():
         except:
             pass
 
+def force_flush():
+    for instance in instances:
+        try:
+            instance.force_flush()
+        except:
+            pass
+
 class SplunkHandler(logging.Handler):
     """
     A logging handler to send events to a Splunk Enterprise instance
@@ -160,6 +167,10 @@ class SplunkHandler(logging.Handler):
         self.write_log("_splunk_worker() called", is_debug=True)
 
         if self.flush_interval > 0:
+            # Stop the timer. Happens automatically if this is called
+            # via the timer, does not if invoked by force_flush()
+            self.timer.cancel()
+
             # Pull everything off the queue.
             queue_empty = True
             while not self.queue.empty():
@@ -228,6 +239,10 @@ class SplunkHandler(logging.Handler):
     def close(self):
         self.shutdown()
         logging.Handler.close(self)
+
+    def force_flush(self):
+        self.write_log("Force flush requested", is_debug=True)
+        self._splunk_worker()
 
     def shutdown(self):
         self.write_log("Immediate shutdown requested", is_debug=True)
