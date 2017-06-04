@@ -20,6 +20,7 @@ else:
 
 instances = []  # For keeping track of running class instances
 
+
 # Called when application exit imminent (main thread ended / got kill signal)
 @atexit.register
 def perform_exit():
@@ -29,12 +30,14 @@ def perform_exit():
         except:
             pass
 
+
 def force_flush():
     for instance in instances:
         try:
             instance.force_flush()
         except:
             pass
+
 
 class SplunkHandler(logging.Handler):
     """
@@ -94,9 +97,8 @@ class SplunkHandler(logging.Handler):
         self.write_log("Preparing to create a Requests session", is_debug=True)
         retry = Retry(total=self.retry_count,
                       backoff_factor=self.retry_backoff,
-                      status_forcelist=[ 500, 502, 503, 504 ])
+                      status_forcelist=[500, 502, 503, 504])
         self.session.mount('https://', HTTPAdapter(max_retries=retry))
-
 
         # Start a worker thread responsible for sending logs
         if self.flush_interval > 0:

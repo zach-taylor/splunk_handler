@@ -69,7 +69,6 @@ class TestSplunkHandler(unittest.TestCase):
         self.assertFalse(logging.getLogger('requests').propagate)
         self.assertFalse(logging.getLogger('splunk_handler').propagate)
 
-
     @mock.patch('requests.Session.post')
     def test_splunk_worker(self, mock_request):
         # Silence root logger
