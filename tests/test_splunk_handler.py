@@ -80,9 +80,10 @@ class TestSplunkHandler(unittest.TestCase):
         log.addHandler(self.splunk)
         log.warning('hello!')
 
-        self.splunk.timer.join() # Have to wait for the timer to exec
+        self.splunk.timer.join()  # Have to wait for the timer to exec
 
-        expected_output = '{"event": "hello!", "host": "%s", "index": "%s", "source": "%s", "sourcetype": "%s", "time": null}' % \
+        expected_output = '{"event": "hello!", "host": "%s", "index": "%s", "source": "%s", ' \
+                          '"sourcetype": "%s", "time": null}' % \
                           (SPLUNK_HOSTNAME, SPLUNK_INDEX, SPLUNK_SOURCE, SPLUNK_SOURCETYPE)
 
         mock_request.assert_called_once_with(
