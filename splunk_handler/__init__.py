@@ -85,6 +85,7 @@ class SplunkHandler(logging.Handler):
 
         # prevent infinite recursion by silencing requests and urllib3 loggers
         logging.getLogger('requests').propagate = False
+        logging.getLogger('urllib3').propagate = False
 
         # and do the same for ourselves
         logging.getLogger(__name__).propagate = False
