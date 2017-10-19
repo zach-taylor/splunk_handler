@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='splunk_handler',
-    version='2.0.5',
+    version='2.0.7',
     license='MIT License',
     description='A Python logging handler that sends your logs to Splunk',
     long_description=open('README.md').read(),
