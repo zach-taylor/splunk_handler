@@ -1,7 +1,7 @@
 # Splunk Handler
 
 [![Build](https://img.shields.io/travis/zach-taylor/splunk_handler.svg?style=flat-square)](https://travis-ci.org/zach-taylor/splunk_handler)
-[![Code Climate](https://img.shields.io/codeclimate/github/zach-taylor/splunk_handler.svg?style=flat-square)](https://codeclimate.com/github/zach-taylor/splunk_handler)
+[![Code Climate](https://img.shields.io/codeclimate/maintainability/zach-taylor/splunk_handler.svg?style=flat-square)](https://codeclimate.com/github/zach-taylor/splunk_handler/maintainability)
 [![PyPI](https://img.shields.io/pypi/v/splunk_handler.svg?style=flat-square)](https://pypi.python.org/pypi/splunk_handler)
 
 **Splunk Handler is a Python Logger for sending logged events to an installation of Splunk Enterprise.**
