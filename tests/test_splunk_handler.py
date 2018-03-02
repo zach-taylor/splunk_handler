@@ -1,7 +1,16 @@
 import logging
 import unittest
+import sys
+from multiprocessing.queues import Queue as MQueue
 
-import mock
+is_py2 = sys.version[0] == '2'
+
+if is_py2:
+    import mock
+    from Queue import Queue
+else:
+    from unittest import mock
+    from queue import Queue
 
 from splunk_handler import SplunkHandler
 
@@ -20,6 +29,7 @@ SPLUNK_QUEUE_SIZE = 1111
 SPLUNK_DEBUG = False
 SPLUNK_RETRY_COUNT = 1
 SPLUNK_RETRY_BACKOFF = 0.1
+SPLUNK_MULTIPLE_PROCESS = False
 
 RECEIVER_URL = 'https://%s:%s/services/collector' % (SPLUNK_HOST, SPLUNK_PORT)
 
@@ -41,6 +51,7 @@ class TestSplunkHandler(unittest.TestCase):
             debug=SPLUNK_DEBUG,
             retry_count=SPLUNK_RETRY_COUNT,
             retry_backoff=SPLUNK_RETRY_BACKOFF,
+            multiple_process=SPLUNK_MULTIPLE_PROCESS,
         )
         self.splunk.testing = True
 
@@ -65,9 +76,50 @@ class TestSplunkHandler(unittest.TestCase):
         self.assertEqual(self.splunk.debug, SPLUNK_DEBUG)
         self.assertEqual(self.splunk.retry_count, SPLUNK_RETRY_COUNT)
         self.assertEqual(self.splunk.retry_backoff, SPLUNK_RETRY_BACKOFF)
+        self.assertEqual(self.splunk.multiple_process, SPLUNK_MULTIPLE_PROCESS)
 
         self.assertFalse(logging.getLogger('requests').propagate)
         self.assertFalse(logging.getLogger('splunk_handler').propagate)
+
+    def test_init_queue_class_type_when_multiple_process(self):
+        splunk = SplunkHandler(
+            host=SPLUNK_HOST,
+            port=SPLUNK_PORT,
+            token=SPLUNK_TOKEN,
+            index=SPLUNK_INDEX,
+            hostname=SPLUNK_HOSTNAME,
+            source=SPLUNK_SOURCE,
+            sourcetype=SPLUNK_SOURCETYPE,
+            verify=SPLUNK_VERIFY,
+            timeout=SPLUNK_TIMEOUT,
+            flush_interval=SPLUNK_FLUSH_INTERVAL,
+            queue_size=SPLUNK_QUEUE_SIZE,
+            debug=SPLUNK_DEBUG,
+            retry_count=SPLUNK_RETRY_COUNT,
+            retry_backoff=SPLUNK_RETRY_BACKOFF,
+            multiple_process=True,
+        )
+        self.assertTrue(isinstance(splunk.queue, MQueue))
+
+    def test_init_queue_class_type_when_not_multiple_process(self):
+        splunk = SplunkHandler(
+            host=SPLUNK_HOST,
+            port=SPLUNK_PORT,
+            token=SPLUNK_TOKEN,
+            index=SPLUNK_INDEX,
+            hostname=SPLUNK_HOSTNAME,
+            source=SPLUNK_SOURCE,
+            sourcetype=SPLUNK_SOURCETYPE,
+            verify=SPLUNK_VERIFY,
+            timeout=SPLUNK_TIMEOUT,
+            flush_interval=SPLUNK_FLUSH_INTERVAL,
+            queue_size=SPLUNK_QUEUE_SIZE,
+            debug=SPLUNK_DEBUG,
+            retry_count=SPLUNK_RETRY_COUNT,
+            retry_backoff=SPLUNK_RETRY_BACKOFF,
+            multiple_process=False,
+        )
+        self.assertTrue(isinstance(splunk.queue, Queue))
 
     @mock.patch('requests.Session.post')
     def test_splunk_worker(self, mock_request):
