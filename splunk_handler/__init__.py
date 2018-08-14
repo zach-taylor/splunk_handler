@@ -48,7 +48,8 @@ class SplunkHandler(logging.Handler):
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False, retry_count=5,
-                 retry_backoff=2.0, protocol='https', proxies = None):
+                 retry_backoff=2.0, protocol='https', proxies = None,
+                 record_format = False):
 
         global instances
         instances.append(self)
@@ -75,6 +76,7 @@ class SplunkHandler(logging.Handler):
         self.retry_backoff = retry_backoff
         self.protocol = protocol
         self.proxies = proxies
+        self.record_format = record_format
 
         self.write_debug_log("Starting debug mode")
 
@@ -170,6 +172,11 @@ class SplunkHandler(logging.Handler):
         if self.testing:
             current_time = None
 
+        if self.record_format:
+            try:
+                record = json.dumps(record)
+            except:
+                pass
         
         params = {
             'time': current_time,
