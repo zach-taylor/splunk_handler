@@ -7,6 +7,7 @@ import time
 import traceback
 
 from threading import Timer
+from multiprocessing import JoinableQueue
 
 import requests
 from requests.packages.urllib3.util.retry import Retry
@@ -48,7 +49,7 @@ class SplunkHandler(logging.Handler):
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False, retry_count=5,
-                 retry_backoff=2.0):
+                 retry_backoff=2.0, multiple_process=False):
 
         global instances
         instances.append(self)
@@ -67,8 +68,12 @@ class SplunkHandler(logging.Handler):
         self.SIGTERM = False  # 'True' if application requested exit
         self.timer = None
         self.testing = False  # Used for slightly altering logic during unit testing
+        self.multiple_process = multiple_process
         # It is possible to get 'behind' and never catch up, so we limit the queue size
-        self.queue = Queue(maxsize=queue_size)
+        if self.multiple_process:
+            self.queue = JoinableQueue(maxsize=queue_size)
+        else:
+            self.queue = Queue(maxsize=queue_size)
         self.debug = debug
         self.session = requests.Session()
         self.retry_count = retry_count
