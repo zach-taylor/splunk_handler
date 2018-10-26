@@ -48,8 +48,8 @@ class SplunkHandler(logging.Handler):
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False, retry_count=5,
-                 retry_backoff=2.0, protocol='https', proxies = None,
-                 record_format = False):
+                 retry_backoff=2.0, protocol='https', proxies=None,
+                 record_format=False):
 
         global instances
         instances.append(self)
@@ -97,13 +97,13 @@ class SplunkHandler(logging.Handler):
         # disable all warnings from urllib3 package
         if not self.verify:
             requests.packages.urllib3.disable_warnings()
-        
+       
         if self.verify and self.protocol == 'http':
             print("[SplunkHandler DEBUG] " + 'cannot use SSL Verify and unsecure connection')
-        
+       
         if self.proxies is not None:
             self.session.proxies = self.proxies
-            
+           
         # Set up automatic retry with back-off
         self.write_debug_log("Preparing to create a Requests session")
         retry = Retry(total=self.retry_count,
@@ -177,7 +177,7 @@ class SplunkHandler(logging.Handler):
                 record = json.dumps(record)
             except:
                 pass
-        
+
         params = {
             'time': current_time,
             'host': self.hostname,
@@ -209,7 +209,7 @@ class SplunkHandler(logging.Handler):
 
         if payload:
             self.write_debug_log("Payload available for sending")
-            url = '%s://%s:%s/services/collector' % (self.protocol,self.host, self.port)
+            url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
             self.write_debug_log("Destination URL is " + url)
 
             try:
