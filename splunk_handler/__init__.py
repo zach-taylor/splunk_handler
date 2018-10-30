@@ -48,7 +48,8 @@ class SplunkHandler(logging.Handler):
                  hostname=None, source=None, sourcetype='text',
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False, retry_count=5,
-                 retry_backoff=2.0):
+                 retry_backoff=2.0, protocol='https', proxies=None,
+                 record_format=False):
 
         global instances
         instances.append(self)
@@ -73,6 +74,9 @@ class SplunkHandler(logging.Handler):
         self.session = requests.Session()
         self.retry_count = retry_count
         self.retry_backoff = retry_backoff
+        self.protocol = protocol
+        self.proxies = proxies
+        self.record_format = record_format
 
         self.write_debug_log("Starting debug mode")
 
@@ -93,14 +97,20 @@ class SplunkHandler(logging.Handler):
         # disable all warnings from urllib3 package
         if not self.verify:
             requests.packages.urllib3.disable_warnings()
-
+       
+        if self.verify and self.protocol == 'http':
+            print("[SplunkHandler DEBUG] " + 'cannot use SSL Verify and unsecure connection')
+       
+        if self.proxies is not None:
+            self.session.proxies = self.proxies
+           
         # Set up automatic retry with back-off
         self.write_debug_log("Preparing to create a Requests session")
         retry = Retry(total=self.retry_count,
                       backoff_factor=self.retry_backoff,
                       method_whitelist=False,  # Retry for any HTTP verb
                       status_forcelist=[500, 502, 503, 504])
-        self.session.mount('https://', HTTPAdapter(max_retries=retry))
+        self.session.mount(self.protocol+'://', HTTPAdapter(max_retries=retry))
 
         self.start_worker_thread()
 
@@ -162,6 +172,12 @@ class SplunkHandler(logging.Handler):
         if self.testing:
             current_time = None
 
+        if self.record_format:
+            try:
+                record = json.dumps(record)
+            except:
+                pass
+
         params = {
             'time': current_time,
             'host': self.hostname,
@@ -193,7 +209,7 @@ class SplunkHandler(logging.Handler):
 
         if payload:
             self.write_debug_log("Payload available for sending")
-            url = 'https://%s:%s/services/collector' % (self.host, self.port)
+            url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
             self.write_debug_log("Destination URL is " + url)
 
             try:
@@ -203,7 +219,7 @@ class SplunkHandler(logging.Handler):
                     data=payload,
                     headers={'Authorization': "Splunk %s" % self.token},
                     verify=self.verify,
-                    timeout=self.timeout,
+                    timeout=self.timeout
                 )
                 r.raise_for_status()  # Throws exception for 4xx/5xx status
                 self.write_debug_log("Payload sent successfully")
