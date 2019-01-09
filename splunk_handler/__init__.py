@@ -9,14 +9,16 @@ import traceback
 from threading import Timer
 
 import requests
-from requests.packages.urllib3.util.retry import Retry
+
 from requests.adapters import HTTPAdapter
 
 is_py2 = sys.version[0] == '2'
 if is_py2:
     from Queue import Queue, Full, Empty
+    from urllib3.util.retry import Retry
 else:
     from queue import Queue, Full, Empty
+    from requests.packages.urllib3.util.retry import Retry
 
 instances = []  # For keeping track of running class instances
 
@@ -49,7 +51,7 @@ class SplunkHandler(logging.Handler):
                  verify=True, timeout=60, flush_interval=15.0,
                  queue_size=5000, debug=False, retry_count=5,
                  retry_backoff=2.0, protocol='https', proxies=None,
-                 record_format=False):
+                 record_format=False, cloud=False):
 
         global instances
         instances.append(self)
@@ -77,6 +79,7 @@ class SplunkHandler(logging.Handler):
         self.protocol = protocol
         self.proxies = proxies
         self.record_format = record_format
+        self.cloud = cloud
 
         self.write_debug_log("Starting debug mode")
 
@@ -194,6 +197,24 @@ class SplunkHandler(logging.Handler):
 
         return formatted_record
 
+    @property
+    def endpoint_url(self):
+
+        url_part = 'services/collector'
+        if self.cloud:
+            url_part = 'services/collector/event'
+
+        url = '%s://%s:%s/%s' % (self.protocol, self.host, self.port, url_part)
+        self.write_debug_log("Destination URL is " + url)
+        return url
+
+    @property
+    def headers(self):
+        if self.token[:7] == "Splunk ":
+            return {'Authorization': self.token}
+        else:
+            return {'Authorization': "Splunk %s" % self.token}
+
     def _splunk_worker(self, payload=None):
         self.write_debug_log("_splunk_worker() called")
 
@@ -209,15 +230,14 @@ class SplunkHandler(logging.Handler):
 
         if payload:
             self.write_debug_log("Payload available for sending")
-            url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
-            self.write_debug_log("Destination URL is " + url)
+
 
             try:
                 self.write_debug_log("Sending payload: " + payload)
                 r = self.session.post(
-                    url,
+                    self.endpoint_url,
                     data=payload,
-                    headers={'Authorization': "Splunk %s" % self.token},
+                    headers=self.headers,
                     verify=self.verify,
                     timeout=self.timeout
                 )
