@@ -16,9 +16,11 @@ is_py2 = sys.version[0] == '2'
 if is_py2:
     from Queue import Queue, Full, Empty
     from urllib3.util.retry import Retry
+    import urllib3
 else:
     from queue import Queue, Full, Empty
     from requests.packages.urllib3.util.retry import Retry
+    import requests.packages.urllib3 as urllib3
 
 instances = []  # For keeping track of running class instances
 
@@ -99,7 +101,7 @@ class SplunkHandler(logging.Handler):
 
         # disable all warnings from urllib3 package
         if not self.verify:
-            requests.packages.urllib3.disable_warnings()
+            urllib3.disable_warnings()
        
         if self.verify and self.protocol == 'http':
             print("[SplunkHandler DEBUG] " + 'cannot use SSL Verify and unsecure connection')
@@ -230,7 +232,6 @@ class SplunkHandler(logging.Handler):
 
         if payload:
             self.write_debug_log("Payload available for sending")
-
 
             try:
                 self.write_debug_log("Sending payload: " + payload)
