@@ -1,4 +1,4 @@
-sudo: false
+dist: bionic
 language: python
 python:
   - "2.7"
