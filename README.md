@@ -4,9 +4,9 @@
 [![Code Climate](https://img.shields.io/codeclimate/maintainability/zach-taylor/splunk_handler.svg?style=flat-square)](https://codeclimate.com/github/zach-taylor/splunk_handler/maintainability)
 [![PyPI](https://img.shields.io/pypi/v/splunk_handler.svg?style=flat-square)](https://pypi.python.org/pypi/splunk_handler)
 
-**Splunk Handler is a Python Logger for sending logged events to an installation of Splunk Enterprise.**
+**Splunk Handler is a Python Logger for sending logged events to an installation of Splunk Enterprise. or an instance of Splunk Cloud**
 
-*This logger requires the destination Splunk Enterprise server to have enabled and configured the [Splunk HTTP Event Collector](http://dev.splunk.com/view/event-collector/SP-CAAAE6M).*
+*This logger requires the splunk server to have the [Splunk HTTP Event Collector](http://dev.splunk.com/view/event-collector/SP-CAAAE6M). enabled and configured*
 
 ## A Note on Using with AWS Lambda
 
@@ -57,6 +57,7 @@ Example:
         #debug=False, # turn on debug mode; prints module activity to stdout, defaults to False
         #retry_count=5, # Number of retry attempts on a failed/erroring connection, defaults to 5
         #retry_backoff=2.0,  # Backoff factor, default options will retry for 1 min, defaults to 2.0
+        #cloud=False # turn on Splunk Cloud support node. this changes the URL used to upload events
     )
 
     logging.getLogger('').addHandler(splunk)
@@ -72,7 +73,10 @@ Here is an open source one: https://github.com/madzak/python-json-logger
 Sometimes it's a good idea to create a logging configuration using a Python dict
 and the `logging.config.dictConfig` function. This method is used by default in Django.
 
-Here is an example dictionary config and how it might be used in a settings file:
+Below is an example dictionary config and how it might be used in a settings file.
+
+(This example assumes that the python-json-logger package is installed)
+
 
 ~~~python
 import os
