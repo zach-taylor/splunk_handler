@@ -128,7 +128,7 @@ class SplunkHandler(logging.Handler):
 
         self.write_debug_log("Writing record to log queue")
         # Put log message into queue; worker thread will pick up
-        if self.cur_queue_size < self.max_queue_size:
+        if not self.max_queue_size or self.cur_queue_size < self.max_queue_size:
             self.queue.append(record)
             self.cur_queue_size += 1
         else:
