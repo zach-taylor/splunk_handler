@@ -61,7 +61,7 @@ class TestSplunkHandler(unittest.TestCase):
         self.assertEqual(self.splunk.verify, SPLUNK_VERIFY)
         self.assertEqual(self.splunk.timeout, SPLUNK_TIMEOUT)
         self.assertEqual(self.splunk.flush_interval, SPLUNK_FLUSH_INTERVAL)
-        self.assertEqual(self.splunk.queue.maxsize, SPLUNK_QUEUE_SIZE)
+        self.assertEqual(self.splunk.max_queue_size, SPLUNK_QUEUE_SIZE)
         self.assertEqual(self.splunk.debug, SPLUNK_DEBUG)
         self.assertEqual(self.splunk.retry_count, SPLUNK_RETRY_COUNT)
         self.assertEqual(self.splunk.retry_backoff, SPLUNK_RETRY_BACKOFF)
