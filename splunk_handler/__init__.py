@@ -45,16 +45,17 @@ class SplunkHandler(logging.Handler):
     running the Splunk HTTP Event Collector.
     """
     def __init__(self, host, port, token, index,
-                 hostname=None, source=None, sourcetype='text',
-                 verify=True, timeout=60, flush_interval=15.0,
-                 queue_size=5000, debug=False, retry_count=5,
-                 retry_backoff=2.0, protocol='https', proxies=None,
-                 record_format=False):
+                 allow_overrides=False, debug=False, flush_interval=15.0,
+                 hostname=None, protocol='https', proxies=None,
+                 queue_size=5000, record_format=False, retry_backoff=2.0,
+                 retry_count=5, source=None, sourcetype='text',
+                 timeout=60, verify=True):
 
         global instances
         instances.append(self)
         logging.Handler.__init__(self)
 
+        self.allow_overrides = allow_overrides
         self.host = host
         self.port = port
         self.token = token
@@ -67,7 +68,6 @@ class SplunkHandler(logging.Handler):
         self.log_payload = ""
         self.SIGTERM = False  # 'True' if application requested exit
         self.timer = None
-        self.testing = False  # Used for slightly altering logic during unit testing
         # It is possible to get 'behind' and never catch up, so we limit the queue size
         self.queue = Queue(maxsize=queue_size)
         self.debug = debug
@@ -97,13 +97,13 @@ class SplunkHandler(logging.Handler):
         # disable all warnings from urllib3 package
         if not self.verify:
             requests.packages.urllib3.disable_warnings()
-       
+
         if self.verify and self.protocol == 'http':
             print("[SplunkHandler DEBUG] " + 'cannot use SSL Verify and unsecure connection')
-       
+
         if self.proxies is not None:
             self.session.proxies = self.proxies
-           
+
         # Set up automatic retry with back-off
         self.write_debug_log("Preparing to create a Requests session")
         retry = Retry(total=self.retry_count,
@@ -163,15 +163,6 @@ class SplunkHandler(logging.Handler):
     def format_record(self, record):
         self.write_debug_log("format_record() called")
 
-        if self.source is None:
-            source = record.pathname
-        else:
-            source = self.source
-
-        current_time = time.time()
-        if self.testing:
-            current_time = None
-
         if self.record_format:
             try:
                 record = json.dumps(record)
@@ -179,12 +170,12 @@ class SplunkHandler(logging.Handler):
                 pass
 
         params = {
-            'time': current_time,
-            'host': self.hostname,
-            'index': self.index,
-            'source': source,
-            'sourcetype': self.sourcetype,
-            'event': self.format(record),
+            'time': self.getsplunkattr(record, '_time', time.time()),
+            'host': self.getsplunkattr(record, '_host', self.hostname),
+            'index': self.getsplunkattr(record, '_index', self.index),
+            'source': record.pathname if self.source is None else self.source,
+            'sourcetype': self.getsplunkattr(record, '_sourcetype', self.sourcetype),
+            'event': self.format(record)
         }
 
         self.write_debug_log("Record dictionary created")
@@ -193,6 +184,16 @@ class SplunkHandler(logging.Handler):
         self.write_debug_log("Record formatting complete")
 
         return formatted_record
+
+    def getsplunkattr(self, obj, attr, default=None):
+        val = default
+        if self.allow_overrides:
+            val = getattr(obj, attr, default)
+            try:
+                delattr(obj, attr)
+            except:
+                pass
+        return val
 
     def _splunk_worker(self, payload=None):
         self.write_debug_log("_splunk_worker() called")
