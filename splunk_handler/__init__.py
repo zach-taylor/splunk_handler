@@ -64,7 +64,6 @@ class SplunkHandler(logging.Handler):
         # It is possible to get 'behind' and never catch up, so we limit the queue size
         self.queue = list()
         self.max_queue_size = queue_size
-        self.cur_queue_size = 0
         self.debug = debug
         self.session = requests.Session()
         self.retry_count = retry_count
@@ -128,9 +127,8 @@ class SplunkHandler(logging.Handler):
 
         self.write_debug_log("Writing record to log queue")
         # Put log message into queue; worker thread will pick up
-        if not self.max_queue_size or self.cur_queue_size < self.max_queue_size:
+        if not self.max_queue_size or len(self.queue) < self.max_queue_size:
             self.queue.append(record)
-            self.cur_queue_size += 1
         else:
             self.write_log("Log queue full; log data will be dropped.")
 
@@ -256,12 +254,16 @@ class SplunkHandler(logging.Handler):
             return True
 
         self.write_debug_log("Recursing through queue")
-        # without looking at each item, estimate how many can fit in 50 MB
-        apprx_size_base = len(self.queue[0])
-        # dont count more than what is in queue to ensure the same number as pulled are deleted
-        count = min(int(524288 / apprx_size_base), len(self.queue))
-        self.log_payload += ''.join(self.queue[:count])
-        del self.queue[:count]
+        if self.SIGTERM:
+            self.log_payload += ''.join(self.queue)
+            self.queue.clear()
+        else:
+            # without looking at each item, estimate how many can fit in 50 MB
+            apprx_size_base = len(self.queue[0])
+            # dont count more than what is in queue to ensure the same number as pulled are deleted
+            count = min(int(524288 / apprx_size_base), len(self.queue))
+            self.log_payload += ''.join(self.queue[:count])
+            del self.queue[:count]
         self.write_debug_log("Queue task completed")
 
         return len(self.queue) > 0
