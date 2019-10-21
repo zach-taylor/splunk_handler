@@ -4,6 +4,9 @@ matrix:
     - name: "Python 2.7 on Bionic"
       python: 2.7
       dist: bionic
+    - name: "Python 3.8 on Bionic"
+      python: 3.8
+      dist: bionic
     - name: "Python 3.7 on Bionic"
       python: 3.7
       dist: bionic
