@@ -2,10 +2,11 @@ from setuptools import setup
 
 setup(
     name='splunk_handler',
-    version='2.1.0',
+    version='2.1.1',
     license='MIT License',
     description='A Python logging handler that sends your logs to Splunk',
     long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     author='Zach Taylor',
     author_email='ztaylor234@gmail.com',
     url='https://github.com/zach-taylor/splunk_handler',
