@@ -2,6 +2,8 @@ import logging
 import unittest
 
 import mock
+from mock import call
+from mock import patch
 
 from splunk_handler import SplunkHandler
 
@@ -98,8 +100,9 @@ class TestSplunkHandler(unittest.TestCase):
         )
 
     def test_splunk_worker_override(self):
-        # Silence root logger
         self.splunk.allow_overrides = True
+
+        # Silence root logger
         log = logging.getLogger('')
         for h in log.handlers:
             log.removeHandler(h)
@@ -124,3 +127,67 @@ class TestSplunkHandler(unittest.TestCase):
             verify=SPLUNK_VERIFY,
             timeout=SPLUNK_TIMEOUT
         )
+
+    def test_full_queue_error(self):
+        self.splunk.allow_overrides = True
+        self.splunk.max_queue_size = 10
+        mock_write_log = patch.object(self.splunk, 'write_log').start()
+
+        # Silence root logger
+        log = logging.getLogger('')
+        for h in log.handlers:
+            log.removeHandler(h)
+
+        log = logging.getLogger('test')
+        for h in log.handlers:
+            log.removeHandler(h)
+
+        log.addHandler(self.splunk)
+
+        for _ in range(20):
+            log.warning('hello!', extra={'_time': 5, '_host': 'host', '_index': 'index'})
+
+        self.splunk.timer.join()
+
+        mock_write_log.assert_any_call("Log queue full; log data will be dropped.")
+
+    def test_wait_until_empty_and_keep_ahead(self):
+        self.splunk.allow_overrides = True
+        self.splunk.force_keep_ahead = True
+        self.splunk.max_queue_size = 10
+        mock_write_log = patch.object(self.splunk, 'write_log').start()
+
+        # Silence root logger
+        log = logging.getLogger('')
+        for h in log.handlers:
+            log.removeHandler(h)
+
+        log = logging.getLogger('test')
+        for h in log.handlers:
+            log.removeHandler(h)
+
+        log.addHandler(self.splunk)
+
+        # without force keep ahead, this would drop logs
+        for _ in range(20):
+            log.warning('hello!', extra={'_time': 5, '_host': 'host', '_index': 'index'})
+
+        # use wait until empty instead of joining the timer
+        # if this doesnt wait correctly, we'd expect to be missing calls to mock_request
+        self.splunk.wait_until_empty()
+
+        expected_output = '{"event": "hello!", "host": "host", "index": "index", ' \
+                          '"source": "%s", "sourcetype": "%s", "time": 5}' % \
+                          (SPLUNK_SOURCE, SPLUNK_SOURCETYPE)
+
+        # two batches of 10 messages sent
+        self.mock_request.assert_has_calls([call(
+            RECEIVER_URL,
+            data=expected_output * 10,
+            headers={'Authorization': 'Splunk %s' % SPLUNK_TOKEN},
+            verify=SPLUNK_VERIFY,
+            timeout=SPLUNK_TIMEOUT
+        )] * 2, any_order=True)
+
+        # verify no logs dropped
+        mock_write_log.assert_not_called()
