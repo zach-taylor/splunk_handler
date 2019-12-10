@@ -11,6 +11,7 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 instances = []  # For keeping track of running class instances
+DEFAULT_QUEUE_SIZE = 5000
 
 
 # Called when application exit imminent (main thread ended / got kill signal)
@@ -19,7 +20,7 @@ def perform_exit():
     for instance in instances:
         try:
             instance.shutdown()
-        except:
+        except Exception:
             pass
 
 
@@ -27,7 +28,15 @@ def force_flush():
     for instance in instances:
         try:
             instance.force_flush()
-        except:
+        except Exception:
+            pass
+
+
+def wait_until_empty():
+    for instance in instances:
+        try:
+            instance.wait_until_empty()
+        except Exception:
             pass
 
 
@@ -39,10 +48,32 @@ class SplunkHandler(logging.Handler):
 
     def __init__(self, host, port, token, index,
                  allow_overrides=False, debug=False, flush_interval=15.0,
-                 hostname=None, protocol='https', proxies=None,
-                 queue_size=5000, record_format=False, retry_backoff=2.0,
-                 retry_count=5, source=None, sourcetype='text',
-                 timeout=60, verify=True):
+                 force_keep_ahead=False, hostname=None, protocol='https',
+                 proxies=None, queue_size=DEFAULT_QUEUE_SIZE, record_format=False,
+                 retry_backoff=2.0, retry_count=5, source=None,
+                 sourcetype='text', timeout=60, verify=True):
+        """
+        Args:
+            host (str): The Splunk host param
+            port (int): The port the host is listening on
+            token (str): Authentication token
+            index (str): Splunk index to write to
+            allow_overrides (bool): Whether to look for _<param> in log data (ex: _index)
+            debug (bool): Whether to print debug console messages
+            flush_interval (float): How often thread should run to push events to splunk host
+            force_keep_ahead (bool): Sleep instead of dropping logs when queue fills
+            hostname (str): The Splunk Enterprise hostname
+            protocol (str): The web protocol to use
+            proxies (list): The proxies to use for the request
+            queue_size (int): The max number of logs to queue, set to 0 for no max
+            record_format (bool): Whether the log record will be json
+            retry_backoff (float): The requests lib backoff factor
+            retry_count (int): The number of times to retry a failed request
+            source (str): The Splunk source param
+            sourcetype (str): The Splunk sourcetype param
+            timeout (float): The time to wait for a response from Splunk
+            verify (bool): Whether to perform ssl certificate validation
+        """
 
         global instances
         instances.append(self)
@@ -58,12 +89,13 @@ class SplunkHandler(logging.Handler):
         self.verify = verify
         self.timeout = timeout
         self.flush_interval = flush_interval
+        self.force_keep_ahead = force_keep_ahead
         self.log_payload = ""
         self.SIGTERM = False  # 'True' if application requested exit
         self.timer = None
         # It is possible to get 'behind' and never catch up, so we limit the queue size
         self.queue = list()
-        self.max_queue_size = queue_size
+        self.max_queue_size = max(queue_size, 0)  # 0 is min queue size
         self.debug = debug
         self.session = requests.Session()
         self.retry_count = retry_count
@@ -71,6 +103,11 @@ class SplunkHandler(logging.Handler):
         self.protocol = protocol
         self.proxies = proxies
         self.record_format = record_format
+
+        # Keep ahead depends on queue size, so cannot be 0
+        if self.force_keep_ahead and not self.max_queue_size:
+            self.write_log("Cannot keep ahead of unbound queue, using default queue size")
+            self.max_queue_size = DEFAULT_QUEUE_SIZE
 
         self.write_debug_log("Starting debug mode")
 
@@ -126,6 +163,11 @@ class SplunkHandler(logging.Handler):
             return
 
         self.write_debug_log("Writing record to log queue")
+
+        # If force keep ahead, sleep until space in queue to prevent falling behind
+        while self.force_keep_ahead and len(self.queue) >= self.max_queue_size:
+            time.sleep(self.alt_flush_interval)
+
         # Put log message into queue; worker thread will pick up
         if not self.max_queue_size or len(self.queue) < self.max_queue_size:
             self.queue.append(record)
@@ -161,7 +203,7 @@ class SplunkHandler(logging.Handler):
         if self.record_format:
             try:
                 record = json.dumps(record)
-            except:
+            except Exception:
                 pass
 
         params = {
@@ -186,7 +228,7 @@ class SplunkHandler(logging.Handler):
             val = getattr(obj, attr, default)
             try:
                 delattr(obj, attr)
-            except:
+            except Exception:
                 pass
         return val
 
@@ -224,7 +266,7 @@ class SplunkHandler(logging.Handler):
                 try:
                     self.write_log("Exception in Splunk logging handler: %s" % str(e))
                     self.write_log(traceback.format_exc())
-                except:
+                except Exception:
                     self.write_debug_log("Exception encountered," +
                                          "but traceback could not be formatted")
 
@@ -241,7 +283,7 @@ class SplunkHandler(logging.Handler):
                 if not queue_is_empty:
                     self.write_debug_log("Queue not empty, scheduling timer to run immediately")
                     # Start up again right away if queue was not cleared
-                    timer_interval = min(1.0, self.flush_interval / 2)
+                    timer_interval = self.alt_flush_interval
 
                 self.write_debug_log("Resetting timer thread")
                 self.timer = Timer(timer_interval, self._splunk_worker)
@@ -284,8 +326,23 @@ class SplunkHandler(logging.Handler):
         self.SIGTERM = True
 
         if self.flush_interval > 0:
-            self.timer.cancel()  # Cancels the scheduled Timer, allows exit immediatley
+            self.timer.cancel()  # Cancels the scheduled Timer, allows exit immediately
 
         self.write_debug_log("Starting up the final run of the worker thread before shutdown")
         # Send the remaining items that might be sitting in queue.
         self._splunk_worker()
+
+    def wait_until_empty(self):
+        self.write_debug_log("Waiting until queue empty")
+        flush_interval = self.flush_interval
+        self.flush_interval = .5
+
+        while len(self.queue) > 0:
+            self.write_debug_log("Current queue size: " + str(len(self.queue)))
+            time.sleep(.5)
+
+        self.flush_interval = flush_interval
+
+    @property
+    def alt_flush_interval(self):
+        return min(1.0, self.flush_interval / 2)
