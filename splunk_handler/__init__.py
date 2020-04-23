@@ -247,7 +247,7 @@ class SplunkHandler(logging.Handler):
 
         if payload:
             self.write_debug_log("Payload available for sending")
-            url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
+            url = '%s://%s:%s/services/collector/event' % (self.protocol, self.host, self.port)
             self.write_debug_log("Destination URL is " + url)
 
             try:
