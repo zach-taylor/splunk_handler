@@ -103,6 +103,7 @@ class SplunkHandler(logging.Handler):
         self.protocol = protocol
         self.proxies = proxies
         self.record_format = record_format
+        self.url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
 
         # Keep ahead depends on queue size, so cannot be 0
         if self.force_keep_ahead and not self.max_queue_size:
@@ -247,13 +248,12 @@ class SplunkHandler(logging.Handler):
 
         if payload:
             self.write_debug_log("Payload available for sending")
-            url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
-            self.write_debug_log("Destination URL is " + url)
+            self.write_debug_log("Destination URL is " + self.url)
 
             try:
                 self.write_debug_log("Sending payload: " + payload)
                 r = self.session.post(
-                    url,
+                    self.url,
                     data=payload,
                     headers={'Authorization': "Splunk %s" % self.token},
                     verify=self.verify,
