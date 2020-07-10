@@ -51,7 +51,7 @@ class SplunkHandler(logging.Handler):
                  force_keep_ahead=False, hostname=None, protocol='https',
                  proxies=None, queue_size=DEFAULT_QUEUE_SIZE, record_format=False,
                  retry_backoff=2.0, retry_count=5, source=None,
-                 sourcetype='text', timeout=60, verify=True):
+                 sourcetype='text', timeout=60, verify=True, url=None):
         """
         Args:
             host (str): The Splunk host param
@@ -103,7 +103,10 @@ class SplunkHandler(logging.Handler):
         self.protocol = protocol
         self.proxies = proxies
         self.record_format = record_format
-        self.url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
+        if not url:
+            self.url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
+        else:
+            self.url = url
 
         # Keep ahead depends on queue size, so cannot be 0
         if self.force_keep_ahead and not self.max_queue_size:
