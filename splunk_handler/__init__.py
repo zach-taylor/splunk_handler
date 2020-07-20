@@ -73,6 +73,7 @@ class SplunkHandler(logging.Handler):
             sourcetype (str): The Splunk sourcetype param
             timeout (float): The time to wait for a response from Splunk
             verify (bool): Whether to perform ssl certificate validation
+            url (str): Override of the url to send the event to
         """
 
         global instances
