@@ -129,6 +129,41 @@ Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
 Note: I included a configuration for the JSON formatter mentioned above.
 
+Here is an example file config, and how it might be used in a config file:
+
+~~~
+[loggers]
+keys=root
+
+[handlers]
+keys=consoleHandler,splunkHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=%(loglevel)s
+handlers=consoleHandler,splunkHandler
+
+[handler_consoleHandler]
+class=StreamHandler
+level=%(loglevel)s
+formatter=simpleFormatter
+args=(sys.stdout,)
+
+[handler_splunkHandler]
+class=splunk_handler.SplunkHandler
+level=%(loglevel)s
+formatter=simpleFormatter
+args=('npe-dmz-hec-splunk.optum.com', '', os.environ.get('SPLUNK_TOKEN_DEV', 'changeme'), 'my_index')
+kwargs={'url':'https://my-splunk-host.me.com/services/collector/event', 'verify': False}
+
+[formatter_simpleFormatter]
+format=[%(asctime)s] %(levelname)s - %(module)s: %(message)s
+datefmt=%m/%d/%Y %I:%M:%S %p %Z
+
+~~~
+
 ## Retry Logic
 
 This library uses the built-in retry logic from urllib3 (a retry
