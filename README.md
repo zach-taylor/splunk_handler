@@ -155,7 +155,7 @@ args=(sys.stdout,)
 class=splunk_handler.SplunkHandler
 level=%(loglevel)s
 formatter=simpleFormatter
-args=('npe-dmz-hec-splunk.optum.com', '', os.environ.get('SPLUNK_TOKEN_DEV', 'changeme'), 'my_index')
+args=('my-splunk-host.me.com', '', os.environ.get('SPLUNK_TOKEN_DEV', 'changeme'), 'my_index')
 kwargs={'url':'https://my-splunk-host.me.com/services/collector/event', 'verify': False}
 
 [formatter_simpleFormatter]
