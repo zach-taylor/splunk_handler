@@ -51,7 +51,7 @@ class SplunkHandler(logging.Handler):
                  force_keep_ahead=False, hostname=None, protocol='https',
                  proxies=None, queue_size=DEFAULT_QUEUE_SIZE, record_format=False,
                  retry_backoff=2.0, retry_count=5, source=None,
-                 sourcetype='text', timeout=60, verify=True, url=None):
+                 sourcetype='text', timeout=60, url=None, verify=True):
         """
         Args:
             host (str): The Splunk host param
@@ -60,11 +60,11 @@ class SplunkHandler(logging.Handler):
             index (str): Splunk index to write to
             allow_overrides (bool): Whether to look for _<param> in log data (ex: _index)
             debug (bool): Whether to print debug console messages
-            flush_interval (float): How often thread should run to push events to splunk host
+            flush_interval (float): How often thread should run to push events to splunk host in microseconds
             force_keep_ahead (bool): Sleep instead of dropping logs when queue fills
             hostname (str): The Splunk Enterprise hostname
             protocol (str): The web protocol to use
-            proxies (list): The proxies to use for the request
+            proxies (dict): The proxies to use for the request
             queue_size (int): The max number of logs to queue, set to 0 for no max
             record_format (bool): Whether the log record will be json
             retry_backoff (float): The requests lib backoff factor
@@ -72,8 +72,8 @@ class SplunkHandler(logging.Handler):
             source (str): The Splunk source param
             sourcetype (str): The Splunk sourcetype param
             timeout (float): The time to wait for a response from Splunk
-            verify (bool): Whether to perform ssl certificate validation
             url (str): Override of the url to send the event to
+            verify (bool): Whether to perform ssl certificate validation
         """
 
         global instances
