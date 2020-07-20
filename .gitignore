@@ -56,3 +56,6 @@ target/
 
 # IntelliJ
 .idea/
+
+# Internal
+Makefile
