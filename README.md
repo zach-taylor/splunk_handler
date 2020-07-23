@@ -41,22 +41,30 @@ Example:
 ~~~python
     import logging
     from splunk_handler import SplunkHandler
-
     splunk = SplunkHandler(
         host='splunk.example.com',
         port='8088',
         token='851A5E58-4EF1-7291-F947-F614A76ACB21',
         index='main'
+        #allow_overrides=True # whether to look for _<param in log data (ex: _index)
+        #debug=True # whether to print module activity to stdout, defaults to False
+        #flush_interval=15.0, # send batch of logs every n sec, defaults to 15.0, set '0' to block thread & send immediately
+        #force_keep_ahead=True # sleep instead of dropping logs when queue fills
         #hostname='hostname', # manually set a hostname parameter, defaults to socket.gethostname()
+        #protocol='http', # set the protocol which will be used to connect to the splunk host
+        #proxies={
+        #           'http': 'http://10.10.1.10:3128',
+        #           'https': 'http://10.10.1.10:1080',
+        #         }, set the proxies for the session request to splunk host
+        #
+        #queue_size=5000, # a throttle to prevent resource overconsumption, defaults to 5000, set to 0 for no max
+        #record_format=True, whether the log format will be json
+        #retry_backoff=1, the requests lib backoff factor, default options will retry for 1 min, defaults to 2.0
+        #retry_count=5, number of retry attempts on a failed/erroring connection, defaults to 5
         #source='source', # manually set a source, defaults to the log record.pathname
         #sourcetype='sourcetype', # manually set a sourcetype, defaults to 'text'
         #verify=True, # turn SSL verification on or off, defaults to True
         #timeout=60, # timeout for waiting on a 200 OK from Splunk server, defaults to 60s
-        #flush_interval=15.0, # send batch of logs every n sec, defaults to 15.0, set '0' to block thread & send immediately
-        #queue_size=5000, # a throttle to prevent resource overconsumption, defaults to 5000
-        #debug=False, # turn on debug mode; prints module activity to stdout, defaults to False
-        #retry_count=5, # Number of retry attempts on a failed/erroring connection, defaults to 5
-        #retry_backoff=2.0,  # Backoff factor, default options will retry for 1 min, defaults to 2.0
     )
 
     logging.getLogger('').addHandler(splunk)
@@ -120,6 +128,41 @@ LOGGING = {
 Then, do `logging.config.dictConfig(LOGGING)` to configure your logging.
 
 Note: I included a configuration for the JSON formatter mentioned above.
+
+Here is an example file config, and how it might be used in a config file:
+
+~~~
+[loggers]
+keys=root
+
+[handlers]
+keys=consoleHandler,splunkHandler
+
+[formatters]
+keys=simpleFormatter
+
+[logger_root]
+level=%(loglevel)s
+handlers=consoleHandler,splunkHandler
+
+[handler_consoleHandler]
+class=StreamHandler
+level=%(loglevel)s
+formatter=simpleFormatter
+args=(sys.stdout,)
+
+[handler_splunkHandler]
+class=splunk_handler.SplunkHandler
+level=%(loglevel)s
+formatter=simpleFormatter
+args=('my-splunk-host.me.com', '', os.environ.get('SPLUNK_TOKEN_DEV', 'changeme'), 'my_index')
+kwargs={'url':'https://my-splunk-host.me.com/services/collector/event', 'verify': False}
+
+[formatter_simpleFormatter]
+format=[%(asctime)s] %(levelname)s - %(module)s: %(message)s
+datefmt=%m/%d/%Y %I:%M:%S %p %Z
+
+~~~
 
 ## Retry Logic
 
