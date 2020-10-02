@@ -60,7 +60,7 @@ class SplunkHandler(logging.Handler):
             index (str): Splunk index to write to
             allow_overrides (bool): Whether to look for _<param> in log data (ex: _index)
             debug (bool): Whether to print debug console messages
-            flush_interval (float): How often to push events to splunk host in microseconds
+            flush_interval (float): How often to push events to splunk host in seconds
             force_keep_ahead (bool): Sleep instead of dropping logs when queue fills
             hostname (str): The Splunk Enterprise hostname
             protocol (str): The web protocol to use
