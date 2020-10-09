@@ -60,7 +60,7 @@ class SplunkHandler(logging.Handler):
             index (str): Splunk index to write to
             allow_overrides (bool): Whether to look for _<param> in log data (ex: _index)
             debug (bool): Whether to print debug console messages
-            flush_interval (float): How often to push events to splunk host in microseconds
+            flush_interval (float): How often to push events to splunk host in seconds
             force_keep_ahead (bool): Sleep instead of dropping logs when queue fills
             hostname (str): The Splunk Enterprise hostname
             protocol (str): The web protocol to use
@@ -249,6 +249,7 @@ class SplunkHandler(logging.Handler):
 
         if not payload:
             payload = self.log_payload
+            self.log_payload = ""
 
         if payload:
             self.write_debug_log("Payload available for sending")
@@ -274,7 +275,6 @@ class SplunkHandler(logging.Handler):
                     self.write_debug_log("Exception encountered," +
                                          "but traceback could not be formatted")
 
-            self.log_payload = ""
         else:
             self.write_debug_log("Timer thread executed but no payload was available to send")
 
@@ -338,14 +338,9 @@ class SplunkHandler(logging.Handler):
 
     def wait_until_empty(self):
         self.write_debug_log("Waiting until queue empty")
-        flush_interval = self.flush_interval
-        self.flush_interval = .5
-
         while len(self.queue) > 0:
             self.write_debug_log("Current queue size: " + str(len(self.queue)))
-            time.sleep(.5)
-
-        self.flush_interval = flush_interval
+            time.sleep(self.alt_flush_interval)
 
     @property
     def alt_flush_interval(self):
