@@ -104,6 +104,7 @@ class SplunkHandler(logging.Handler):
         self.protocol = protocol
         self.proxies = proxies
         self.record_format = record_format
+        self.processing_payload = False
         if not url:
             self.url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
         else:
@@ -244,7 +245,7 @@ class SplunkHandler(logging.Handler):
             # Stop the timer. Happens automatically if this is called
             # via the timer, does not if invoked by force_flush()
             self.timer.cancel()
-
+            self.processing_payload = True
             queue_is_empty = self.empty_queue()
 
         if not payload:
@@ -294,6 +295,7 @@ class SplunkHandler(logging.Handler):
                 self.timer.daemon = True  # Auto-kill thread if main process exits
                 self.timer.start()
                 self.write_debug_log("Timer thread scheduled")
+        self.processing_payload = False
 
     def empty_queue(self):
         if len(self.queue) == 0:
@@ -318,6 +320,7 @@ class SplunkHandler(logging.Handler):
     def force_flush(self):
         self.write_debug_log("Force flush requested")
         self._splunk_worker()
+        self.wait_until_empty()  # guarantees queue is emptied
 
     def shutdown(self):
         self.write_debug_log("Immediate shutdown requested")
@@ -335,10 +338,11 @@ class SplunkHandler(logging.Handler):
         self.write_debug_log("Starting up the final run of the worker thread before shutdown")
         # Send the remaining items that might be sitting in queue.
         self._splunk_worker()
+        self.wait_until_empty()  # guarantees queue is emptied before exit
 
     def wait_until_empty(self):
         self.write_debug_log("Waiting until queue empty")
-        while len(self.queue) > 0:
+        while len(self.queue) > 0 or self.processing_payload:
             self.write_debug_log("Current queue size: " + str(len(self.queue)))
             time.sleep(self.alt_flush_interval)
 
