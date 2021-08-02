@@ -145,7 +145,7 @@ class SplunkHandler(logging.Handler):
         self.write_debug_log("Preparing to create a Requests session")
         retry = Retry(total=self.retry_count,
                       backoff_factor=self.retry_backoff,
-                      method_whitelist=False,  # Retry for any HTTP verb
+                      allowed_methods=None,  # Retry for any HTTP verb
                       status_forcelist=[500, 502, 503, 504])
         self.session.mount(self.protocol + '://', HTTPAdapter(max_retries=retry))
 
