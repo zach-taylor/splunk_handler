@@ -23,7 +23,7 @@ SPLUNK_DEBUG = False
 SPLUNK_RETRY_COUNT = 1
 SPLUNK_RETRY_BACKOFF = 0.1
 
-RECEIVER_URL = 'https://%s:%s/services/collector' % (SPLUNK_HOST, SPLUNK_PORT)
+RECEIVER_URL = 'https://%s:%s/services/collector/event' % (SPLUNK_HOST, SPLUNK_PORT)
 
 
 class TestSplunkHandler(unittest.TestCase):

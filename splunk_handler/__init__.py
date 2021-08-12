@@ -106,7 +106,7 @@ class SplunkHandler(logging.Handler):
         self.record_format = record_format
         self.processing_payload = False
         if not url:
-            self.url = '%s://%s:%s/services/collector' % (self.protocol, self.host, self.port)
+            self.url = '%s://%s:%s/services/collector/event' % (self.protocol, self.host, self.port)
         else:
             self.url = url
 
