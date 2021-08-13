@@ -309,8 +309,9 @@ class SplunkHandler(logging.Handler):
         else:
             # without looking at each item, estimate how many can fit in 50 MB
             apprx_size_base = len(self.queue[0])
+            # dont eval max/event size ration as less than 1
             # dont count more than what is in queue to ensure the same number as pulled are deleted
-            count = min(int(524288 / apprx_size_base), len(self.queue))
+            count = min(max(int(524288 / apprx_size_base), 1), len(self.queue))
             self.log_payload += ''.join(self.queue[:count])
             del self.queue[:count]
         self.write_debug_log("Queue task completed")
