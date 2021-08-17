@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='splunk_handler',
-    version='2.2.2',
+    version='3.0.0',
     license='MIT License',
     description='A Python logging handler that sends your logs to Splunk',
     long_description=open('README.md').read(),
@@ -20,12 +20,10 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: System :: Logging'
     ]
 )
