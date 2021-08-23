@@ -11,7 +11,7 @@ setup(
     author_email='ztaylor234@gmail.com',
     url='https://github.com/zach-taylor/splunk_handler',
     packages=['splunk_handler'],
-    install_requires=['requests >= 2.6.0, < 3.0.0'],
+    install_requires=['requests >= 2.25.0, < 3.0.0'],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
