@@ -316,7 +316,7 @@ class SplunkHandler(logging.Handler):
             del self.queue[:count]
         self.write_debug_log("Queue task completed")
 
-        return len(self.queue) > 0
+        return len(self.queue) == 0
 
     def force_flush(self):
         self.write_debug_log("Force flush requested")
